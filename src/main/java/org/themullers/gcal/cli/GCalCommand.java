@@ -2,7 +2,13 @@ package org.themullers.gcal.cli;
 
 import picocli.CommandLine;
 
-@CommandLine.Command(name="gcal", subcommands = {UpcomingSubcommand.class, SubscribeSubcommand.class, CalendarsSubcommand.class})
+@CommandLine.Command(name="gcal",
+        subcommands = {
+            UpcomingSubcommand.class,
+            SubscribeSubcommand.class,
+            CalendarsSubcommand.class,
+            EmailSubcommand.class,
+        })
 public class GCalCommand {
 
     @CommandLine.Option(names = {"-v", "--verbose"})

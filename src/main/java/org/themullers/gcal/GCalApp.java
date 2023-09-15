@@ -4,8 +4,7 @@ package org.themullers.gcal;
 import org.themullers.gcal.cli.GCalCommand;
 import org.themullers.gcal.google.GoogleCalendarAPI;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.util.logging.LogManager;
 
 /**
  * A command-line app to interact with google calendar.  This app uses a Google service account,
@@ -22,16 +21,29 @@ public class GCalApp
      * @param args  parameters and options the affect the behavior of the application
      */
     public static void main( String[] args ) {
+
+        // this disables the logging from the Hawking date/time parser
+        // also required is the slf4j-nop project in the classpath
+        LogManager.getLogManager().reset();
+
+        // let picocli process the commands; it'll call back to methods below
         System.exit(GCalCommand.execute(args));
     }
 
     /**
-     * List all of the calendars to which the service account is subscribed.
+     * List all the calendars to which the service account is subscribed.
      */
-    public static void calendars() throws GeneralSecurityException, IOException {
+    public static void calendars() {
         for (var cal : GoogleCalendarAPI.instance().calendars()) {
             System.out.println(cal);
         }
+    }
+
+    /**
+     * Display the email associated with the service account's credentials loaded at startup.
+     */
+    public static void serviceAccountEmail() {
+        System.out.println(GoogleCalendarAPI.instance().getServiceAccountEmail());
     }
 
     /**

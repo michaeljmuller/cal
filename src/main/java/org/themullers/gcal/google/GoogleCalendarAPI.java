@@ -9,7 +9,6 @@ import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.Events;
 import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import org.themullers.gcal.EventInfo;
 
@@ -25,6 +24,7 @@ import java.util.List;
 public class GoogleCalendarAPI {
 
     Calendar service;
+    String email;
     static GoogleCalendarAPI instance = null;
 
     /**
@@ -43,7 +43,7 @@ public class GoogleCalendarAPI {
      * GoogleCalendarAPI constructor.
      */
     protected GoogleCalendarAPI() {
-        service = authenticate();
+        authenticate();
     }
 
     /**
@@ -108,7 +108,7 @@ public class GoogleCalendarAPI {
      *
      * @return  a list of calendar IDs
      */
-    public List<String> calendars() throws GeneralSecurityException, IOException {
+    public List<String> calendars() {
         try {
             var calendars = new LinkedList<String>();
             for (var cal : service.calendarList().list().execute().getItems()) {
@@ -122,21 +122,37 @@ public class GoogleCalendarAPI {
     }
 
     /**
-     * Authenticate with Google and return a service object that can be used to make Calendar API calls.
-     * @return  a service object
+     * Get the service account's email address.  In order for this tool to be able
+     * to operate on a calendar, that calendar must be shared with this email address.
+     *
+     * @return the email address associated with the credentials loaded at startup
      */
-    protected Calendar authenticate() {
+    public String getServiceAccountEmail() {
+        return email;
+    }
 
+    /**
+     * Authenticate with Google and set the service object that can be used to make Calendar API calls
+     * as well as the email associated with that service account.
+     */
+    protected void authenticate() {
+
+        // open the service account credential json file for reading
         try (var fis = new FileInputStream(credentialFile())) {
 
-            GoogleCredentials credentials = ServiceAccountCredentials.fromStream(fis)
-                    .createScoped(Collections.singleton(CalendarScopes.CALENDAR));
+            // parse the service account credential file and extract the email
+            var sac = ServiceAccountCredentials.fromStream(fis);
+            email = sac.getClientEmail();
 
-            Calendar service = new Calendar.Builder(GoogleNetHttpTransport.newTrustedTransport(), new GsonFactory(), new HttpCredentialsAdapter(credentials))
-                    .setApplicationName("Test")
-                    .build();
-
-            return service;
+            // create a service object that can be used to perform calendar operations
+            var transport = GoogleNetHttpTransport.newTrustedTransport();
+            var jsonFactory = new GsonFactory();
+            var scope = Collections.singleton(CalendarScopes.CALENDAR);
+            var credentials = sac.createScoped(scope);
+            var initializer = new HttpCredentialsAdapter(credentials);
+            service = new Calendar.Builder(transport, jsonFactory, initializer)
+                .setApplicationName("Test")
+                .build();
         }
         catch (IOException | GeneralSecurityException e) {
             throw new GoogleCalendarAPIException(e);

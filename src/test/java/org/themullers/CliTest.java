@@ -10,37 +10,42 @@ public class CliTest {
     }
 
     @Test
-    public void testNoArgs() throws Exception {
+    public void testNoArgs() {
         assert run() > 0;
     }
 
     @Test
-    public void testUpcomingNoCalID() throws Exception {
+    public void testUpcomingNoCalID() {
         assert run("upcoming") > 0;
     }
 
     @Test
-    public void testUpcoming() throws Exception {
+    public void testUpcoming() {
         assert run("upcoming", "mike@themullers.org") == 0;
     }
 
     @Test
-    public void testUpcomingNumber() throws Exception {
+    public void testUpcomingNumber() {
         assert run("upcoming", "-n", "15", "mike@themullers.org") == 0;
     }
 
     @Test
-    public void testSubscribeNoCalID() throws Exception {
+    public void testSubscribeNoCalID() {
         run("subscribe");
     }
 
     @Test
-    public void testSubscribe() throws Exception {
+    public void testSubscribe() {
         run("subscribe", "mike@themullers.org");
     }
 
     @Test
-    public void testCalendars() throws Exception {
+    public void testCalendars() {
         run("calendars");
+    }
+
+    @Test
+    public void testEmail() {
+        run("email");
     }
 }
