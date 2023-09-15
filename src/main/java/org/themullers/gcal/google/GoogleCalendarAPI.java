@@ -151,7 +151,7 @@ public class GoogleCalendarAPI {
             var credentials = sac.createScoped(scope);
             var initializer = new HttpCredentialsAdapter(credentials);
             service = new Calendar.Builder(transport, jsonFactory, initializer)
-                .setApplicationName("Test")
+                .setApplicationName("Google Calendar CLI")
                 .build();
         }
         catch (IOException | GeneralSecurityException e) {
