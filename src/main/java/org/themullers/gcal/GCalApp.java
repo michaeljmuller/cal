@@ -65,4 +65,8 @@ public class GCalApp
         GoogleCalendarAPI.instance().subscribe(calendarId);
         System.out.println("subscribed to " + calendarId);
     }
+
+    public static void addEvent() {
+        GoogleCalendarAPI.instance().addEvent("mike@themullers.org");
+    }
 }

@@ -57,7 +57,6 @@ public class GoogleCalendarAPI {
      */
     public List<EventInfo> upcoming(String calendarId, int count) {
         return rethrow(() -> {
-
             var eventInfo = new LinkedList<EventInfo>();
 
             // get the list of events
@@ -90,11 +89,14 @@ public class GoogleCalendarAPI {
      * @param calendarId  the ID of the calendar to subscribe to
      */
     public void subscribe(String calendarId)  {
-        rethrow(() -> {
+        try {
             var calendar = new CalendarListEntry();
             calendar.setId(calendarId);
             service.calendarList().insert(calendar).execute();
-        });
+        }
+        catch (IOException e) {
+            throw new GoogleCalendarAPIException(e);
+        }
     }
 
     /**
