@@ -7,10 +7,12 @@ import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.api.services.calendar.model.Event;
+import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import org.themullers.gcal.EventInfo;
+import org.themullers.gcal.util.Rethrow;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,10 +56,9 @@ public class GoogleCalendarAPI {
      * @return  information about upcoming events from the specified calendar
      */
     public List<EventInfo> upcoming(String calendarId, int count) {
+        return rethrow(() -> {
 
-        var eventInfo = new LinkedList<EventInfo>();
-
-        try {
+            var eventInfo = new LinkedList<EventInfo>();
 
             // get the list of events
             DateTime now = new DateTime(System.currentTimeMillis());
@@ -77,12 +78,8 @@ public class GoogleCalendarAPI {
                 eventInfo.add(new EventInfo(event.getSummary(), start));
             }
 
-        }
-        catch (IOException e) {
-            throw new GoogleCalendarAPIException(e);
-        }
-
-        return eventInfo;
+            return eventInfo;
+        });
     }
 
     /**
@@ -93,14 +90,11 @@ public class GoogleCalendarAPI {
      * @param calendarId  the ID of the calendar to subscribe to
      */
     public void subscribe(String calendarId)  {
-        try {
+        rethrow(() -> {
             var calendar = new CalendarListEntry();
             calendar.setId(calendarId);
             service.calendarList().insert(calendar).execute();
-        }
-        catch (IOException e) {
-            throw new GoogleCalendarAPIException(e);
-        }
+        });
     }
 
     /**
@@ -109,16 +103,13 @@ public class GoogleCalendarAPI {
      * @return  a list of calendar IDs
      */
     public List<String> calendars() {
-        try {
+        return rethrow(() -> {
             var calendars = new LinkedList<String>();
             for (var cal : service.calendarList().list().execute().getItems()) {
                 calendars.add(cal.getSummary());
             }
             return calendars;
-        }
-        catch (IOException e) {
-            throw new GoogleCalendarAPIException(e);
-        }
+        });
     }
 
     /**
@@ -129,6 +120,39 @@ public class GoogleCalendarAPI {
      */
     public String getServiceAccountEmail() {
         return email;
+    }
+
+    public void addEvent(String calendarId) {
+        rethrow(() -> {
+            var dt = new DateTime("2023-09-16");
+            var tz = "America/Denver";
+            var edt = new EventDateTime().setDate(dt).setTimeZone(tz);
+
+            var event = new Event();
+            event.setSummary("test event");
+            event.setStart(edt);
+            event.setEnd(edt);
+
+            service.events().insert(calendarId, event).execute();
+        });
+    }
+
+    /**
+     * Helper method to execute code, re-throwing any exceptions as a GoogleCalendarAPIException.
+     * @param run  the code to execute
+     */
+    public void rethrow(Rethrow.ThrowingRunnable run) {
+        Rethrow.exec(GoogleCalendarAPIException.class, run);
+    }
+
+    /**
+     * Helper method to execute a function, re-throwing any exceptions as a GoogleCalendarAPIException.
+     * @param func  the function to execute
+     * @param <T>  the type of the function's return
+     * @return  the value returned by the function
+     */
+    public <T> T rethrow(Rethrow.ThrowingSupplier<T> func) {
+        return Rethrow.exec(GoogleCalendarAPIException.class, func);
     }
 
     /**

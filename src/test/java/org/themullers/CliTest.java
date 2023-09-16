@@ -48,4 +48,6 @@ public class CliTest {
     public void testEmail() {
         run("email");
     }
+
+
 }
